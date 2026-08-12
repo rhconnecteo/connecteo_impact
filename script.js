@@ -1,371 +1,55 @@
-// ================================================================
-// CONFIGURATION API
-// ================================================================
-// Remplacez par l'URL de votre Web App déployée
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbx_9MoTAF1EDc3hTV6EEkYpifLH7t5oWFRWYBPMNqMdGrPIzlyO0UlVIwKaRmOPGRoBQA/exec';
-
-// ================================================================
-// État + appels API REST optimisés
-// ================================================================
-let donneesMatricule = [];
-let chargementEnCours = false;
-
-function setActive(id) {
-  document.getElementById('btn-matricule').classList.remove('is-active');
-  document.getElementById('btn-pole').classList.remove('is-active');
-  document.getElementById(id).classList.add('is-active');
-}
-
-function showLoading() {
-  document.getElementById('panel').innerHTML =
-    '<div class="loading-state"><div class="spinner"></div>Chargement des données…</div>';
-}
-
-function showError(msg) {
-  document.getElementById('panel').innerHTML =
-    '<div class="error-state">⚠️ ' + msg + '</div>';
-}
-
-// ----- Fonction avec cache et timeout plus long -----
-async function callAPI(endpoint) {
-  // Vérifier le cache localStorage d'abord (ultra-rapide)
-  const cacheKey = 'dashboard_' + endpoint;
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) {
-    try {
-      const data = JSON.parse(cached);
-      const timestamp = data.timestamp || 0;
-      // Cache valable 10 minutes
-      if (Date.now() - timestamp < 600000) {
-        return data.value;
-      }
-    } catch (e) {}
-  }
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAIwSURBVHgB7VdNS+NAGP4m07RmRaSIFg/iwYPrVrR+oAWLlFWK0LqCJ1HwIJ4Efxh40FQKlUURPFVvFkSUFYp4MCvehD1VrdqKrQ1aYcGJHzTpzvNOXpOJpkkHgo8hOe993ud5530+goeHh8eXJwiCrzAvuRle/9YjCK6GeXly9+i6Wnx1/S81qOEq++f8//r4Nnq/4KKrq0uAs1QqlU+AGKlp2um3qjG3i55nR0ZGBCTwQPLy8jKCgevp6dmbmZn5jrk1YMgyG5AA/jMAAXiSFYCD8/PzaZ/P9wZglWGYlzd/hYwoU9MEe1BApVL5BQDiMqYZL3hFcwOgbDabI91vwtDl5WXcMpnVr2wNBOjDcXFxMSbLEsMPQxwfHy/5/X6FumWz2ZO2tjaZ+mdnZzsZj0AApbW1tZ3FxcVvLPzS09MjY2NjP6Kjo2NqYGBAcnd3F+AXjI+Pr6bT6Q/oBqY5zNY9Pz/f8Hg8//mpp3v37T2jY66co6Oj7zzCQENDwzQ8XAYHB9eoC5S4d+/eABPTe++HhoYekJqaGgNs9grdQQcHnU7nOh2lAW4OoeFxVpZlIqPcCeAu/LoSWtPW1jaB4S8AxeFwTMNMEbojlEuWIQyXpKCzQ5VKD5Y3UKhS8aAZPLQ8o0EL4HdycrKXyXp7e9uhmB3AAkIQT5AFyM3NzbUQQgLqg1nG/0aOHWpQxTmKqUnmFfEHoFgHYYpnzD4AAAAASUVORK5CYII=">
+  <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230ABAB5'/%3E%3Ctext x='50' y='68' font-family='Arial' font-size='52' font-weight='bold' text-anchor='middle' fill='white'%3EC%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0ABAB5">
+  <meta name="msapplication-TileColor" content="#0ABAB5">
   
-  const url = API_BASE_URL + '?endpoint=' + endpoint;
-  
-  // Timeout augmenté à 15 secondes (Google Apps Script peut être lent)
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
-  
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/json',
-      },
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      throw new Error('Erreur HTTP: ' + response.status);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Erreur inconnue');
-    }
-    
-    // Sauvegarder dans le cache local
-    localStorage.setItem(cacheKey, JSON.stringify({
-      timestamp: Date.now(),
-      value: data
-    }));
-    
-    return data;
-    
-  } catch (error) {
-    clearTimeout(timeoutId);
-    
-    if (error.name === 'AbortError') {
-      return await callAPIWithProxy(endpoint);
-    }
-    
-    // Si l'erreur est CORS, essayer avec un proxy
-    if (error.message.includes('CORS') || error.message.includes('fetch')) {
-      return await callAPIWithProxy(endpoint);
-    }
-    throw error;
-  }
-}
+  <title>Connecteo Impact</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-// ----- Fonction avec proxy CORS (AllOrigins) -----
-async function callAPIWithProxy(endpoint) {
-  const originalUrl = API_BASE_URL + '?endpoint=' + endpoint;
-  const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(originalUrl);
-  
-  // Timeout plus long pour le proxy (30 secondes)
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-  
-  try {
-    const response = await fetch(proxyUrl, {
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      throw new Error('Erreur proxy: ' + response.status);
-    }
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Erreur inconnue');
-    }
-    
-    return data;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error('Le proxy a pris trop de temps. Vérifiez votre connexion Internet.');
-    }
-    throw new Error('Impossible de contacter l\'API: ' + error.message);
-  }
-}
+  <div class="wrap">
+    <header class="hero">
+      <!-- connecteo en haut (couleur) -->
+      <div class="logo-container">
+        <img src="data:image/png;base64,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" alt="connecteo" class="logo">
+      </div>
+      
+      <!-- IMPACT en bas en BLANC et PLUS GRAND -->
+      <div class="impact-wrapper">
+        <span class="impact-text">IMPACT</span>
+      </div>
+      
+      <h1>Plus vous participez, <em>plus vous gagnez de points.</em></h1>
+      <p class="subtitle">Consultez le score de chaque matricule ou le total par pôle...</p>
 
-// ----- Bouton 1 : points par matricule avec affichage progressif -----
-function afficherParMatricule() {
-  if (chargementEnCours) return;
-  
-  setActive('btn-matricule');
-  document.getElementById('search-row').style.display = 'block';
-  showLoading();
-  chargementEnCours = true;
+      <div class="actions">
+        <button class="btn" id="btn-matricule" onclick="afficherParMatricule()">
+          <span class="ico">🧾</span> Points par matricule
+        </button>
+        <button class="btn secondary" id="btn-pole" onclick="afficherParPole()">
+          <span class="ico">🏷️</span> Total par pôle
+        </button>
+      </div>
 
-  // Utiliser les données du cache si disponibles
-  const cacheKey = 'dashboard_matricules';
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) {
-    try {
-      const data = JSON.parse(cached);
-      const timestamp = data.timestamp || 0;
-      if (Date.now() - timestamp < 600000) {
-        donneesMatricule = data.value.data;
-        renderMatriculesProgressively(data.value.data);
-        chargementEnCours = false;
-        return;
-      }
-    } catch (e) {}
-  }
+      <div class="search-row" id="search-row" style="display:none;">
+        <span class="mag">🔎</span>
+        <input type="text" id="search-input" placeholder="Rechercher un matricule ou un nom…" oninput="filtrerMatricules()">
+      </div>
+    </header>
 
-  callAPI('matricules')
-    .then(function (response) {
-      donneesMatricule = response.data;
-      renderMatriculesProgressively(response.data);
-      chargementEnCours = false;
-    })
-    .catch(function (error) {
-      // En cas d'erreur, essayer d'utiliser le cache même expiré
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const data = JSON.parse(cached);
-          donneesMatricule = data.value.data;
-          renderMatriculesProgressively(data.value.data);
-          chargementEnCours = false;
-          return;
-        } catch (e) {}
-      }
-      showError(error.message);
-      chargementEnCours = false;
-    });
-}
+    <div id="panel">
+      <div class="empty-state">📊 Choisissez une vue ci-dessus pour faire apparaître les données.</div>
+    </div>
+  </div>
 
-// ----- Rendu progressif (les données apparaissent ligne par ligne) -----
-function renderMatriculesProgressively(data) {
-  if (!data || data.length === 0) {
-    document.getElementById('panel').innerHTML = '<div class="empty-state">Aucune donnée trouvée dans la feuille.</div>';
-    return;
-  }
-
-  const panel = document.getElementById('panel');
-  
-  // Créer la structure du tableau immédiatement
-  panel.innerHTML =
-    '<div class="card">' +
-      '<h2>Points par matricule</h2>' +
-      '<div class="meta">' + data.length + ' collaborateur(s)</div>' +
-      '<div style="max-height:500px;overflow-y:auto;">' +
-        '<table id="tbl-matricule">' +
-          '<thead><tr><th>Matricule</th><th>Nom et Prénoms</th><th>Pôle</th><th>Point</th></tr></thead>' +
-          '<tbody id="table-body"></tbody>' +
-        '</table>' +
-      '</div>' +
-    '</div>';
-  
-  const tbody = document.getElementById('table-body');
-  let currentIndex = 0;
-  const batchSize = 50;
-  
-  // Fonction pour ajouter des lignes par lots
-  function addNextBatch() {
-    const endIndex = Math.min(currentIndex + batchSize, data.length);
-    const fragment = document.createDocumentFragment();
-    
-    for (let i = currentIndex; i < endIndex; i++) {
-      const r = data[i];
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td>' + r.matricule + '</td>' +
-        '<td>' + r.nom + '</td>' +
-        '<td>' + r.pole + '</td>' +
-        '<td class="pt">' + r.point + '</td>';
-      fragment.appendChild(tr);
-    }
-    
-    tbody.appendChild(fragment);
-    currentIndex = endIndex;
-    
-    if (currentIndex < data.length) {
-      requestAnimationFrame(addNextBatch);
-    }
-  }
-  
-  requestAnimationFrame(addNextBatch);
-}
-
-// ----- Version rapide pour le filtrage -----
-function renderMatricules(data) {
-  if (!data || data.length === 0) {
-    document.getElementById('panel').innerHTML = '<div class="empty-state">Aucune donnée trouvée dans la feuille.</div>';
-    return;
-  }
-
-  let rows = '';
-  for (let i = 0; i < data.length; i++) {
-    const r = data[i];
-    rows += '<tr>' +
-      '<td>' + r.matricule + '</td>' +
-      '<td>' + r.nom + '</td>' +
-      '<td>' + r.pole + '</td>' +
-      '<td class="pt">' + r.point + '</td>' +
-      '</tr>';
-  }
-
-  document.getElementById('panel').innerHTML =
-    '<div class="card">' +
-      '<h2>Points par matricule</h2>' +
-      '<div class="meta">' + data.length + ' collaborateur(s)</div>' +
-      '<div style="max-height:500px;overflow-y:auto;">' +
-        '<table id="tbl-matricule">' +
-          '<thead><tr><th>Matricule</th><th>Nom et Prénoms</th><th>Pôle</th><th>Point</th></tr></thead>' +
-          '<tbody>' + rows + '</tbody>' +
-        '</table>' +
-      '</div>' +
-    '</div>';
-}
-
-function filtrerMatricules() {
-  const q = document.getElementById('search-input').value.trim().toLowerCase();
-  if (q === '') {
-    renderMatricules(donneesMatricule);
-  } else {
-    const filtered = donneesMatricule.filter(function (r) {
-      return r.matricule.toLowerCase().includes(q) || r.nom.toLowerCase().includes(q);
-    });
-    renderMatricules(filtered);
-  }
-}
-
-// ----- Bouton 2 : total par pôle (affichage instantané) -----
-function afficherParPole() {
-  if (chargementEnCours) return;
-  
-  setActive('btn-pole');
-  document.getElementById('search-row').style.display = 'none';
-  showLoading();
-  chargementEnCours = true;
-
-  // Utiliser les données du cache si disponibles
-  const cacheKey = 'dashboard_poles';
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) {
-    try {
-      const data = JSON.parse(cached);
-      const timestamp = data.timestamp || 0;
-      if (Date.now() - timestamp < 600000) {
-        renderPoles(data.value.data);
-        chargementEnCours = false;
-        return;
-      }
-    } catch (e) {}
-  }
-
-  callAPI('poles')
-    .then(function (response) {
-      renderPoles(response.data);
-      chargementEnCours = false;
-    })
-    .catch(function (error) {
-      // En cas d'erreur, essayer d'utiliser le cache même expiré
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const data = JSON.parse(cached);
-          renderPoles(data.value.data);
-          chargementEnCours = false;
-          return;
-        } catch (e) {}
-      }
-      showError(error.message);
-      chargementEnCours = false;
-    });
-}
-
-function renderPoles(data) {
-  if (!data || data.length === 0) {
-    document.getElementById('panel').innerHTML = '<div class="empty-state">Aucune donnée trouvée dans la feuille.</div>';
-    return;
-  }
-
-  const max = Math.max.apply(null, data.map(function (d) { return d.total; }));
-  const medals = ['🥇', '🥈', '🥉'];
-
-  let rows = '';
-  for (let i = 0; i < data.length; i++) {
-    const d = data[i];
-    const pct = max > 0 ? Math.round((d.total / max) * 100) : 0;
-    const medal = medals[i] || '';
-    rows += '<div class="bar-row">' +
-      '<div class="rank-name"><span class="medal">' + medal + '</span>' + d.pole + '</div>' +
-      '<div class="bar-track"><div class="bar-fill" data-pct="' + pct + '"></div></div>' +
-      '<div class="pt">' + d.total + '</div>' +
-      '</div>';
-  }
-
-  document.getElementById('panel').innerHTML =
-    '<div class="card">' +
-      '<h2>Total des points par pôle</h2>' +
-      '<div class="meta">' + data.length + ' pôle(s)</div>' +
-      rows +
-    '</div>';
-
-  requestAnimationFrame(function () {
-    document.querySelectorAll('.bar-fill').forEach(function (el) {
-      el.style.width = el.getAttribute('data-pct') + '%';
-    });
-  });
-}
-
-// ================================================================
-// PRÉCHARGEMENT AU DÉMARRAGE
-// ================================================================
-document.addEventListener('DOMContentLoaded', function () {
-  setTimeout(function () {
-    callAPI('matricules')
-      .then(function (response) {
-        donneesMatricule = response.data;
-      })
-      .catch(function (error) {});
-  }, 1000);
-});
-
-// Rendre les fonctions globales pour onclick
-window.afficherParMatricule = afficherParMatricule;
-window.afficherParPole = afficherParPole;
-window.filtrerMatricules = filtrerMatricules;
+  <script src="script.js"></script>
+</body>
+</html>
