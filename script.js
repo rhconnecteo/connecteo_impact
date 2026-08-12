@@ -2,7 +2,7 @@
 // CONFIGURATION API
 // ================================================================
 // Remplacez par l'URL de votre Web App déployée
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzXT-GTatAz75ISQKVekud3mZkTTR_L38paF2d0RHqaauZcYa9Yzi7vQLl5EIh6Ntgp9A/exec';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxAQdO-DTwqBeRbL_8p8KcYP8UNZM7LRyo2SRwk4EkUAWaeqAgMQzajvARzTZMZaXSlJg/exec';
 
 // ================================================================
 // SOLUTION 1: Utiliser un proxy CORS (Recommandé)
