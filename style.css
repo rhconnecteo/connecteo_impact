@@ -28,55 +28,6 @@ html, body {
   position: relative;
 }
 
-/* ---------- Papillons en fond ---------- */
-#butterfly-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.butterfly {
-  position: absolute;
-  width: 48px;
-  height: 40px;
-  top: -60px;
-  left: 0;
-  will-change: transform;
-  filter: drop-shadow(0 6px 10px rgba(8, 110, 106, 0.25));
-  animation-name: fly, drift;
-  animation-timing-function: linear, ease-in-out;
-  animation-iteration-count: infinite, infinite;
-}
-
-.butterfly svg { width: 100%; height: 100%; display: block; }
-
-.wing {
-  transform-origin: 30px 24px;
-  animation: flap 0.42s ease-in-out infinite alternate;
-}
-.wing.left { animation-delay: 0s; }
-.wing.right { animation-delay: 0.02s; }
-
-@keyframes flap {
-  from { transform: scaleX(1); }
-  to   { transform: scaleX(0.35); }
-}
-
-@keyframes fly {
-  from { transform: translateY(-10vh) translateX(0); }
-  to   { transform: translateY(110vh) translateX(0); }
-}
-
-@keyframes drift {
-  0%   { margin-left: 0px; }
-  25%  { margin-left: 60px; }
-  50%  { margin-left: -40px; }
-  75%  { margin-left: 80px; }
-  100% { margin-left: 0px; }
-}
-
 /* ---------- Layout général ---------- */
 .wrap {
   position: relative;
@@ -91,25 +42,85 @@ header.hero {
   margin-bottom: 46px;
 }
 
-/* ---------- Logos ---------- */
-.logo,
-.logo-impact {
-  height: 62px;
-  width: auto;
-  max-width: 220px;
-  object-fit: contain;
-  vertical-align: middle;
-  filter: drop-shadow(0 6px 14px rgba(8, 110, 106, 0.18));
+/* ---------- connecteo en haut (couleur) ---------- */
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
 .logo {
-  margin-right: 18px;
-  margin-bottom: 22px;
+  height: 56px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 14px rgba(8, 110, 106, 0.18));
 }
 
-.logo-impact {
-  margin-left: 18px;
-  margin-bottom: 22px;
+/* ---------- IMPACT en bas en BLANC et PLUS GRAND ---------- */
+.impact-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 8px 0;
+}
+
+.impact-text {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 2vw, 120px);
+  font-weight: 200;
+  color: var(--white);
+  text-shadow: 
+    0 2px 4px rgba(8, 110, 106, 0.2),
+    0 4px 20px rgba(8, 110, 106, 0.15),
+    0 8px 40px rgba(8, 110, 106, 0.1);
+  letter-spacing: 6px;
+  line-height: 1.1;
+  display: inline-block;
+  position: relative;
+}
+
+/* Effet de brillance subtile */
+.impact-text::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255,255,255,0.25) 0%, 
+    transparent 40%, 
+    transparent 60%, 
+    rgba(255,255,255,0.08) 100%);
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+/* Version avec effet de soulignement élégant (optionnel) */
+.impact-text-underline {
+  font-family: var(--font-display);
+  font-size: clamp(64px, 12vw, 120px);
+  font-weight: 700;
+  color: var(--white);
+  text-shadow: 0 2px 12px rgba(8, 110, 106, 0.2);
+  letter-spacing: 6px;
+  line-height: 1.1;
+  display: inline-block;
+  position: relative;
+}
+
+.impact-text-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 5%;
+  width: 90%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--white), transparent);
+  border-radius: 2px;
+  opacity: 0.5;
 }
 
 .eyebrow {
@@ -132,7 +143,7 @@ h1 {
   font-weight: 600;
   font-size: clamp(32px, 5vw, 52px);
   line-height: 1.08;
-  margin: 0 0 14px;
+  margin: 8px 0 14px;
   color: var(--ink);
 }
 
@@ -368,9 +379,13 @@ footer {
 @media (max-width: 560px) {
   .bar-row { grid-template-columns: 90px 1fr 46px; }
   .card { padding: 20px; }
-  .logo, .logo-impact { height: 48px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .butterfly, .wing { animation: none !important; }
+  .logo { height: 40px; max-width: 150px; }
+  .impact-text { 
+    font-size: clamp(48px, 14vw, 70px);
+    letter-spacing: 4px;
+  }
+  .impact-text-underline { 
+    font-size: clamp(48px, 14vw, 70px);
+    letter-spacing: 4px;
+  }
 }
