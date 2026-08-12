@@ -2,7 +2,7 @@
 // CONFIGURATION API
 // ================================================================
 // Remplacez par l'URL de votre Web App déployée
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyOaVdSJFlfFzo7AJV5ibXPPVESSlkuAkVGRzdVCYidY9bZ85-lhSmhWG1_B92uvJWAiA/exec';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbx_9MoTAF1EDc3hTV6EEkYpifLH7t5oWFRWYBPMNqMdGrPIzlyO0UlVIwKaRmOPGRoBQA/exec';
 
 // ================================================================
 // État + appels API REST optimisés
