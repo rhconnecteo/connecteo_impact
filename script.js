@@ -37,7 +37,6 @@ async function callAPI(endpoint) {
       const timestamp = data.timestamp || 0;
       // Cache valable 10 minutes
       if (Date.now() - timestamp < 600000) {
-        console.log('📦 Données du cache local');
         return data.value;
       }
     } catch (e) {}
@@ -50,7 +49,6 @@ async function callAPI(endpoint) {
   const timeoutId = setTimeout(() => controller.abort(), 15000);
   
   try {
-    console.log('🔄 Appel API:', endpoint);
     const response = await fetch(url, {
       method: 'GET',
       mode: 'cors',
@@ -67,7 +65,6 @@ async function callAPI(endpoint) {
     }
     
     const data = await response.json();
-    console.log('✅ Réponse reçue:', data.count || 'OK');
     
     if (!data.success) {
       throw new Error(data.error || 'Erreur inconnue');
@@ -85,14 +82,11 @@ async function callAPI(endpoint) {
     clearTimeout(timeoutId);
     
     if (error.name === 'AbortError') {
-      console.log('⏱️ Timeout, tentative avec proxy...');
-      // Essayer avec proxy en cas de timeout
       return await callAPIWithProxy(endpoint);
     }
     
     // Si l'erreur est CORS, essayer avec un proxy
     if (error.message.includes('CORS') || error.message.includes('fetch')) {
-      console.log('🔄 Erreur CORS, tentative avec proxy...');
       return await callAPIWithProxy(endpoint);
     }
     throw error;
@@ -103,8 +97,6 @@ async function callAPI(endpoint) {
 async function callAPIWithProxy(endpoint) {
   const originalUrl = API_BASE_URL + '?endpoint=' + endpoint;
   const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(originalUrl);
-  
-  console.log('🔄 Appel via proxy:', endpoint);
   
   // Timeout plus long pour le proxy (30 secondes)
   const controller = new AbortController();
@@ -121,7 +113,6 @@ async function callAPIWithProxy(endpoint) {
       throw new Error('Erreur proxy: ' + response.status);
     }
     const data = await response.json();
-    console.log('✅ Réponse proxy reçue');
     
     if (!data.success) {
       throw new Error(data.error || 'Erreur inconnue');
@@ -154,7 +145,6 @@ function afficherParMatricule() {
       const data = JSON.parse(cached);
       const timestamp = data.timestamp || 0;
       if (Date.now() - timestamp < 600000) {
-        console.log('📦 Affichage depuis le cache');
         donneesMatricule = data.value.data;
         renderMatriculesProgressively(data.value.data);
         chargementEnCours = false;
@@ -175,7 +165,6 @@ function afficherParMatricule() {
       if (cached) {
         try {
           const data = JSON.parse(cached);
-          console.log('⚠️ Utilisation du cache expiré en secours');
           donneesMatricule = data.value.data;
           renderMatriculesProgressively(data.value.data);
           chargementEnCours = false;
@@ -211,7 +200,7 @@ function renderMatriculesProgressively(data) {
   
   const tbody = document.getElementById('table-body');
   let currentIndex = 0;
-  const batchSize = 50; // 50 lignes par lot pour un affichage plus rapide
+  const batchSize = 50;
   
   // Fonction pour ajouter des lignes par lots
   function addNextBatch() {
@@ -232,14 +221,11 @@ function renderMatriculesProgressively(data) {
     tbody.appendChild(fragment);
     currentIndex = endIndex;
     
-    // Mettre à jour le compteur
     if (currentIndex < data.length) {
-      // Utiliser requestAnimationFrame pour un rendu fluide
       requestAnimationFrame(addNextBatch);
     }
   }
   
-  // Démarrer le chargement progressif immédiatement
   requestAnimationFrame(addNextBatch);
 }
 
@@ -250,7 +236,6 @@ function renderMatricules(data) {
     return;
   }
 
-  // Générer le HTML rapidement
   let rows = '';
   for (let i = 0; i < data.length; i++) {
     const r = data[i];
@@ -304,7 +289,6 @@ function afficherParPole() {
       const data = JSON.parse(cached);
       const timestamp = data.timestamp || 0;
       if (Date.now() - timestamp < 600000) {
-        console.log('📦 Affichage depuis le cache');
         renderPoles(data.value.data);
         chargementEnCours = false;
         return;
@@ -323,7 +307,6 @@ function afficherParPole() {
       if (cached) {
         try {
           const data = JSON.parse(cached);
-          console.log('⚠️ Utilisation du cache expiré en secours');
           renderPoles(data.value.data);
           chargementEnCours = false;
           return;
@@ -362,7 +345,6 @@ function renderPoles(data) {
       rows +
     '</div>';
 
-  // Anime les barres immédiatement
   requestAnimationFrame(function () {
     document.querySelectorAll('.bar-fill').forEach(function (el) {
       el.style.width = el.getAttribute('data-pct') + '%';
@@ -374,16 +356,12 @@ function renderPoles(data) {
 // PRÉCHARGEMENT AU DÉMARRAGE
 // ================================================================
 document.addEventListener('DOMContentLoaded', function () {
-  // Précharger les données en arrière-plan
   setTimeout(function () {
     callAPI('matricules')
       .then(function (response) {
         donneesMatricule = response.data;
-        console.log('✅ Données préchargées:', donneesMatricule.length, 'collaborateurs');
       })
-      .catch(function (error) {
-        console.log('ℹ️ Préchargement:', error.message);
-      });
+      .catch(function (error) {});
   }, 1000);
 });
 
